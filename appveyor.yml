@@ -1,0 +1,22 @@
+version: 1.0.{build}-{branch}
+image: Visual Studio 2017
+environment:
+  LOCAL_NUGET_SOURCE_PATH: C:\projects
+before_build:
+- cmd: dotnet restore
+build:
+  verbosity: minimal
+artifacts:
+- path: '**\*.nupkg'
+deploy:
+- provider: Environment
+  name: CDorstNuGet
+  on:
+    branch: master
+notifications:
+- provider: Email
+  to:
+  - chris@dorst.email
+  on_build_success: true
+  on_build_failure: true
+  on_build_status_changed: false
