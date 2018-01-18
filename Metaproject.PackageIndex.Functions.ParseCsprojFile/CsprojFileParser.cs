@@ -14,21 +14,31 @@ namespace Metaproject.PackageIndex.Functions.ParseCsprojFile
             var lines = File.ReadAllLines(path)
                 .Where(line => !IsNullOrWhiteSpace(line));
             return new PackageCsproj(
-                GetTagValue("Name", lines).Substring(7),
+                GetName(path),
                 GetTagValue("Description", lines),
                 GetTagValue("Version", lines),
                 GetReferences(lines).ToList());
         }
 
+        private static string GetName(string path)
+        {
+            var name = new FileInfo(path).Name;
+            return name.Substring(0, name.Length - ".csproj".Length);
+        }
+
         private static IEnumerable<NuGetReference> GetReferences(IEnumerable<string> lines)
         {
             foreach (var line in lines.Where(it
-                => it.Contains("<PackageReference")))
+                => it.Contains("<PackageReference")
+                || it.Contains("<DotNetCliToolsReference")))
             {
                 var split = line.Split('"');
                 yield return new NuGetReference(
                     include: split.ElementAt(2),
-                    version: split.ElementAt(4));
+                    version: split.ElementAt(4),
+                    line.Contains("<PackageReference")
+                        ? ReferenceType.PackageReference
+                        : ReferenceType.DotNetCliToolReference);
             }
         }
 
